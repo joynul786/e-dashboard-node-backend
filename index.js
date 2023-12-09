@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-app.post("/register", async (req, resp) => {
+app.post("/signup", async (req, resp) => {
     const user = new userModel(req.body);
     let result = await user.save();
     result = result.toObject();
@@ -16,11 +16,11 @@ app.post("/register", async (req, resp) => {
 });
 
 app.post("/login", async (req, resp) => {
-    if ((req.body.email || req.body.name) && req.body.password) {
+    if (req.body.email && req.body.password) {
         const searchUser = await userModel.findOne(req.body).select("-password");
         searchUser ? resp.send(searchUser) : resp.send({ Result: "No User Found!!" });
     } else {
-        resp.send({ Result: "Email / Username and password require for login!!" });
+        resp.send({ Result: "Email and password require for login!!" });
     };
 });
 
