@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const userModel = require("./mongoDBConnect/UserSchema");
+const productModel = require("./mongoDBConnect/ProductSchema");
 require("./mongoDBConnect/config");
 
 const app = express();
@@ -14,7 +15,6 @@ app.post("/signup", async (req, resp) => {
     delete result.password;
     resp.send(result);
 });
-
 app.post("/login", async (req, resp) => {
     if (req.body.email && req.body.password) {
         const searchUser = await userModel.findOne(req.body).select("-password");
@@ -23,5 +23,12 @@ app.post("/login", async (req, resp) => {
         resp.send({ Result: "Email and password require for login!!" });
     };
 });
+
+app.post("/add-product", async (req, resp) => {
+    const feedData = new productModel(req.body);
+    const result = await feedData.save();
+    resp.send(result);
+});
+
 
 app.listen(5000);
