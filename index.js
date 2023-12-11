@@ -9,11 +9,16 @@ app.use(express.json());
 app.use(cors());
 
 app.post("/signup", async (req, resp) => {
-    const user = new userModel(req.body);
-    let result = await user.save();
-    result = result.toObject();
-    delete result.password;
-    resp.send(result);
+    if (req.body.name && req.body.email && req.body.password) {
+        const user = new userModel(req.body);
+        let result = await user.save();
+        result = result.toObject();
+        delete result.password;
+        resp.send(result);
+    } else {
+        resp.send({ Result: "Name, email and password required for login!!" });
+    };
+    
 });
 app.post("/login", async (req, resp) => {
     if (req.body.email && req.body.password) {
@@ -25,9 +30,13 @@ app.post("/login", async (req, resp) => {
 });
 
 app.post("/add-product", async (req, resp) => {
-    const feedData = new productModel(req.body);
-    const result = await feedData.save();
-    resp.send(result);
+    if (req.body.name && req.body.price && req.body.brand && req.body.category && req.body.userId) {
+        const feedData = new productModel(req.body);
+        const result = await feedData.save();
+        resp.send(result);
+    } else {
+        resp.send({Result:"Please fill the all are requirement details!!"});
+    };
 });
 
 
