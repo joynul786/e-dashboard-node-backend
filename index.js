@@ -39,5 +39,14 @@ app.post("/add-product", async (req, resp) => {
     };
 });
 
+app.get("/products", async (_, resp) => {
+    const getData = await productModel.find();
+    if (getData.length > 0) {
+        resp.send(getData);
+    } else {
+        resp.send({ Result: "No products found!!" });
+    };
+});
+
 
 app.listen(5000);
