@@ -70,9 +70,7 @@ app.post("/products/:id", async (req, resp) => {
     );
     if (getData) {
         resp.send(getData);
-    } else {
-        resp.send({ Result: "No record found for update!!" });
-    };
+    }
 });
 
 
