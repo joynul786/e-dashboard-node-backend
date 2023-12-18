@@ -63,7 +63,7 @@ app.get("/products/:id", async (req, resp) => {
         resp.send({ Result: "No record found!!" });
     };
 });
-app.post("/products/:id", async (req, resp) => {
+app.put("/products/:id", async (req, resp) => {
     const getData = await productModel.updateOne(
         { _id: req.params.id },
         {$set: req.body},
