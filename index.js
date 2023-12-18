@@ -29,6 +29,7 @@ app.post("/login", async (req, resp) => {
     };
 });
 
+
 app.post("/add-product", async (req, resp) => {
     if (req.body.name && req.body.price && req.body.brand && req.body.category && req.body.userId) {
         const feedData = new productModel(req.body);
@@ -38,7 +39,6 @@ app.post("/add-product", async (req, resp) => {
         resp.send({Result:"Please fill the all are requirement details!!"});
     };
 });
-
 app.get("/products", async (_, resp) => {
     const getData = await productModel.find();
     if (getData.length > 0) {
@@ -48,11 +48,19 @@ app.get("/products", async (_, resp) => {
     };
 });
 app.delete("/products/:id", async (req, resp) => {
-    const getData = await productModel.deleteOne({_id:req.params.id});
+    const getResult = await productModel.deleteOne({_id:req.params.id});
+    if (getResult) {
+        resp.send(getResult);
+    } else {
+        resp.send({ Result: "Some thing went wrong!!" });
+    };
+});
+app.get("/products/:id", async (req, resp) => {
+    const getData = await productModel.findOne({_id:req.params.id});
     if (getData) {
         resp.send(getData);
     } else {
-        resp.send({ Result: "Some thing went wrong!!" });
+        resp.send({ Result: "No record found!!" });
     };
 });
 
