@@ -9,69 +9,78 @@ app.use(express.json());
 app.use(cors());
 
 app.post("/signup", async (req, resp) => {
-    if (req.body.name && req.body.email && req.body.password) {
-        const user = new userModel(req.body);
-        let result = await user.save();
-        result = result.toObject();
-        delete result.password;
-        resp.send(result);
-    } else {
-        resp.send({ Result: "Name, email and password required for login!!" });
-    };
-    
+  if (req.body.name && req.body.email && req.body.password) {
+    const user = new userModel(req.body);
+    let result = await user.save();
+    result = result.toObject();
+    delete result.password;
+    resp.send(result);
+  } else {
+    resp.send({ Result: "Name, email and password required for login!!" });
+  }
 });
 app.post("/login", async (req, resp) => {
-    if (req.body.email && req.body.password) {
-        const searchUser = await userModel.findOne(req.body).select("-password");
-        searchUser ? resp.send(searchUser) : resp.send({ Result: "No User Found!!" });
-    } else {
-        resp.send({ Result: "Email and password require for login!!" });
-    };
+  if (req.body.email && req.body.password) {
+    const searchUser = await userModel.findOne(req.body).select("-password");
+    searchUser
+      ? resp.send(searchUser)
+      : resp.send({ Result: "No User Found!!" });
+  } else {
+    resp.send({ Result: "Email and password require for login!!" });
+  }
 });
-
 
 app.post("/add-product", async (req, resp) => {
-    if (req.body.name && req.body.price && req.body.brand && req.body.category && req.body.userId) {
-        const feedData = new productModel(req.body);
-        const result = await feedData.save();
-        resp.send(result);
-    } else {
-        resp.send({Result:"Please fill the all are requirement details!!"});
-    };
+  if ( req.body.name && req.body.price && req.body.brand && req.body.category && req.body.userId ) {
+    const feedData = new productModel(req.body);
+    const result = await feedData.save();
+    resp.send(result);
+  } else {
+    resp.send({ Result: "Please fill the all are requirement details!!" });
+  }
 });
 app.get("/products", async (_, resp) => {
-    const getData = await productModel.find();
-    if (getData.length > 0) {
-        resp.send(getData);
-    } else {
-        resp.send({ Result: "No products found!!" });
-    };
+  const getData = await productModel.find();
+  if (getData.length > 0) {
+    resp.send(getData);
+  } else {
+    resp.send({ Result: "No products found!!" });
+  }
 });
 app.delete("/products/:id", async (req, resp) => {
-    const getResult = await productModel.deleteOne({_id:req.params.id});
-    if (getResult) {
-        resp.send(getResult);
-    } else {
-        resp.send({ Result: "Some thing went wrong!!" });
-    };
+  const getResult = await productModel.deleteOne({ _id: req.params.id });
+  if (getResult) {
+    resp.send(getResult);
+  } else {
+    resp.send({ Result: "Some thing went wrong!!" });
+  }
 });
 app.get("/products/:id", async (req, resp) => {
-    const getData = await productModel.findOne({_id:req.params.id});
-    if (getData) {
-        resp.send(getData);
-    } else {
-        resp.send({ Result: "No record found!!" });
-    };
+  const getData = await productModel.findOne({ _id: req.params.id });
+  if (getData) {
+    resp.send(getData);
+  } else {
+    resp.send({ Result: "No record found!!" });
+  }
 });
 app.put("/products/:id", async (req, resp) => {
-    const getData = await productModel.updateOne(
-        { _id: req.params.id },
-        {$set: req.body},
-    );
-    if (getData) {
-        resp.send(getData);
-    }
+  const getData = await productModel.updateOne(
+    { _id: req.params.id },
+    { $set: req.body }
+  );
+  if (getData) {
+    resp.send(getData);
+  }
 });
-
+app.get("/search/:key", async (req, resp) => {
+  const getdata = await productModel.find({
+    $or: [
+      { name: { $regex: req.params.key } },
+      { category: { $regex: req.params.key } },
+      { brand: { $regex: req.params.key } },
+    ],
+  });
+  resp.send(getdata);
+});
 
 app.listen(5000);
