@@ -29,6 +29,14 @@ app.post("/login", async (req, resp) => {
     resp.send({ Result: "Email and password require for login!!" });
   }
 });
+app.delete("/account/:id", async (req, resp) => {
+  const getResult = await userModel.deleteOne({ _id: req.params.id });
+  if (getResult) {
+    resp.send(getResult);
+  } else {
+    resp.send({ Result: "Some thing went wrong!!" });
+  }
+});
 
 app.post("/add-product", async (req, resp) => {
   if ( req.body.name && req.body.price && req.body.brand && req.body.category && req.body.userId ) {
