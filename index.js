@@ -47,8 +47,8 @@ app.post("/add-product", async (req, resp) => {
     resp.send({ Result: "Please fill the all are requirement details!!" });
   }
 });
-app.get("/products", async (_, resp) => {
-  const getData = await productModel.find();
+app.get("/products-of-user/:userId", async ( req, resp) => {
+  const getData = await productModel.find({ userId: req.params.userId });
   if (getData.length > 0) {
     resp.send(getData);
   } else {
@@ -63,7 +63,7 @@ app.delete("/products/:id", async (req, resp) => {
     resp.send({ Result: "Some thing went wrong!!" });
   }
 });
-app.get("/products/:id", async (req, resp) => {
+app.get("/products/:id", async (req, resp) => {      // get for update the product
   const getData = await productModel.findOne({ _id: req.params.id });
   if (getData) {
     resp.send(getData);
@@ -89,6 +89,11 @@ app.get("/search/:key", async (req, resp) => {
     ],
   });
   resp.send(getdata);
+});
+app.delete("/products-of-user/:userId", async ( req, resp) => {
+  const getData = await productModel.deleteMany({ userId: req.params.userId });
+  resp.send(getData);
+  
 });
 
 app.listen(5000);
