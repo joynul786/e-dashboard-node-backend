@@ -4,6 +4,10 @@ const userModel = require("./mongoDBConnect/UserSchema");
 const productModel = require("./mongoDBConnect/ProductSchema");
 require("./mongoDBConnect/config");
 
+const Jwt = require("jsonwebtoken");
+require("dotenv").config();
+const jwtKey = process.env.JWT_SECRET;
+
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -14,7 +18,14 @@ app.post("/signup", async (req, resp) => {
     let result = await user.save();
     result = result.toObject();
     delete result.password;
-    resp.send(result);
+
+    Jwt.sign({ result }, jwtKey, (err, token) => {
+      if (err) {
+        resp.send("Something went wrong. Please try again later!!")
+      };
+      resp.send({result, auth: token });
+    });
+    
   } else {
     resp.send({ Result: "Name, email and password required for login!!" });
   }
@@ -22,12 +33,21 @@ app.post("/signup", async (req, resp) => {
 app.post("/login", async (req, resp) => {
   if (req.body.email && req.body.password) {
     const searchUser = await userModel.findOne(req.body).select("-password");
-    searchUser
-      ? resp.send(searchUser)
-      : resp.send({ Result: "No User Found!!" });
+
+    if (searchUser) {
+      Jwt.sign({ searchUser }, jwtKey, (err, token) => {
+        if (err) {
+          resp.send({Result: "Something went wrong. Please try again later!!"});
+        };
+        resp.send({searchUser, auth: token });
+      });
+    } else {
+      resp.send({ Result: "No user found!!" });
+    };
+
   } else {
     resp.send({ Result: "Email and password require for login!!" });
-  }
+  };
 });
 app.delete("/account/:id", async (req, resp) => {
   const getResult = await userModel.deleteOne({ _id: req.params.id });
