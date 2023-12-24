@@ -8,6 +8,8 @@ const Jwt = require("jsonwebtoken");
 require("dotenv").config();
 const jwtKey = process.env.JWT_SECRET; 
 
+const port = process.env.LISTEN_PORT;
+
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -125,4 +127,4 @@ app.delete("/products-of-user/:userId", async ( req, resp) => {
   resp.send(getData);
 });
 
-app.listen(5000);
+app.listen(port);
