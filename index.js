@@ -22,12 +22,8 @@ app.post("/signup", async (req, resp) => {
     resultData = resultData.toObject();
     delete resultData.password;
 
-    Jwt.sign({ resultData }, jwtKey, (err, token) => {
-      if (err) {
-        resp.send("Something went wrong. Please try again later!!")
-      };
-      resp.send({resultData, authToken: token });
-    });
+    const token = Jwt.sign(resultData, jwtKey, { expiresIn: "1h" });
+    resp.send({resultData, authToken: token});
     
   } else {
     resp.send({ Result: "Name, email and password required for login!!" });
@@ -38,11 +34,8 @@ app.post("/login", async (req, resp) => {
   if (req.body.email && req.body.password) {
     const userDetail = await userModel.findOne(req.body).select("-password");
 
-    if (userDetail) {
-      Jwt.sign({ userDetail }, jwtKey, (err, token) => {
-        if (err) {
-          resp.send({Result: "Something went wrong. Please try again later!!"});
-        };
+    if (userDetail) {    
+      Jwt.sign({ userDetail }, jwtKey, { expiresIn: "1h" }, (err, token) => {   // above sign up jwt token code is not working here.
         resp.send({userDetail, authToken: token });
       });
     } else {
