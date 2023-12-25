@@ -4,6 +4,9 @@ const userModel = require("./mongoDBConnect/UserSchema");
 const productModel = require("./mongoDBConnect/ProductSchema");
 require("./mongoDBConnect/config");
 
+const verifyToken = require("./middlewares");
+const route = express.Router();
+
 const Jwt = require("jsonwebtoken");
 require("dotenv").config();
 const jwtKey = process.env.JWT_SECRET; 
@@ -13,6 +16,10 @@ const port = process.env.LISTEN_PORT;
 const app = express();
 app.use(express.json());
 app.use(cors());
+route.use(verifyToken);
+app.use("/", route);
+
+
 
 //  API of Sing up
 app.post("/signup", async (req, resp) => {
@@ -47,7 +54,7 @@ app.post("/login", async (req, resp) => {
   };
 });
 // API of user account delete 
-app.delete("/account/:id", async (req, resp) => {
+route.delete("/account/:id", async (req, resp) => {
   const getResult = await userModel.deleteOne({ _id: req.params.id });
   if (getResult) {
     resp.send(getResult);
@@ -57,7 +64,7 @@ app.delete("/account/:id", async (req, resp) => {
 });
 
 // API of product add
-app.post("/add-product", async (req, resp) => {
+route.post("/add-product", async (req, resp) => {
   if ( req.body.name && req.body.price && req.body.brand && req.body.category && req.body.userId ) {
     const feedData = new productModel(req.body);
     const result = await feedData.save();
@@ -66,8 +73,8 @@ app.post("/add-product", async (req, resp) => {
     resp.send({ Result: "Please fill the all are requirement details!!" });
   }
 });
-// API of visible products of login/signup user only
-app.get("/products-of-user/:userId", async ( req, resp) => {
+// API of show products seperately to every login/signup user only
+route.get("/products-of-user/:userId", async ( req, resp) => {
   const getData = await productModel.find({ userId: req.params.userId });
   if (getData.length > 0) {
     resp.send(getData);
@@ -76,7 +83,7 @@ app.get("/products-of-user/:userId", async ( req, resp) => {
   }
 });
 // API of product delete
-app.delete("/products/:id", async (req, resp) => {
+route.delete("/products/:id", async (req, resp) => {
   const getResult = await productModel.deleteOne({ _id: req.params.id });
   if (getResult) {
     resp.send(getResult);
@@ -85,7 +92,7 @@ app.delete("/products/:id", async (req, resp) => {
   }
 });
 // API of get product for update this product
-app.get("/products/:id", async (req, resp) => {      
+route.get("/products/:id", async (req, resp) => {      
   const getData = await productModel.findOne({ _id: req.params.id });
   if (getData) {
     resp.send(getData);
@@ -94,7 +101,7 @@ app.get("/products/:id", async (req, resp) => {
   }
 });
 // API of update product
-app.put("/products/:id", async (req, resp) => {
+route.put("/products/:id", async (req, resp) => {
   const getData = await productModel.updateOne(
     { _id: req.params.id },
     { $set: req.body }
@@ -104,7 +111,7 @@ app.put("/products/:id", async (req, resp) => {
   }
 });
 // API of product search
-app.get("/search/:key", async (req, resp) => {
+route.get("/search/:key", verifyToken, async (req, resp) => {
   const getdata = await productModel.find({
     $or: [
       { name: { $regex: req.params.key } },
@@ -115,9 +122,10 @@ app.get("/search/:key", async (req, resp) => {
   resp.send(getdata);
 });
 // API of delete products of an user on an account delete
-app.delete("/products-of-user/:userId", async ( req, resp) => {
+route.delete("/products-of-user/:userId", async ( req, resp) => {
   const getData = await productModel.deleteMany({ userId: req.params.userId });
   resp.send(getData);
 });
+
 
 app.listen(port);
