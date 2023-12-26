@@ -17,115 +17,187 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 route.use(verifyToken);
-app.use("/", route);
 
 
 
 //  API of Sing up
 app.post("/signup", async (req, resp) => {
-  if (req.body.name && req.body.email && req.body.password) {
-    const user = new userModel(req.body);
-    let resultData = await user.save();
-    resultData = resultData.toObject();
-    delete resultData.password;
+  try {
 
-    const token = Jwt.sign(resultData, jwtKey, { expiresIn: "1h" });
-    resp.send({resultData, authToken: token});
-    
-  } else {
-    resp.send({ Result: "Name, email and password required for login!!" });
-  };
+    if (req.body.name && req.body.email && req.body.password) {
+      const user = new userModel(req.body);
+      let resultData = await user.save();
+      resultData = resultData.toObject();
+      delete resultData.password;
+  
+      const token = Jwt.sign(resultData, jwtKey, { expiresIn: "1h" });
+      resp.send(201)({resultData, authToken: token});
+      
+    } else {
+      resp.status(401).send({ Result: "Name, email and password required for login!!" });
+    };
+
+  } catch (error) {
+    console.error(error);
+    resp.status(500).send({ Result: "An error occurred while processing your request." });
+  }
+
 });
 // API of Login
 app.post("/login", async (req, resp) => {
-  if (req.body.email && req.body.password) {
-    const userDetail = await userModel.findOne(req.body).select("-password");
+  try {
 
-    if (userDetail) {    
-      Jwt.sign({ userDetail }, jwtKey, { expiresIn: "1h" }, (err, token) => {   // above sign up jwt token code is not working here.
-        resp.send({userDetail, authToken: token });
-      });
+    if (req.body.email && req.body.password) {
+      const userDetail = await userModel.findOne(req.body).select("-password");
+  
+      if (userDetail) {    
+        Jwt.sign({ userDetail }, jwtKey, { expiresIn: "1h" }, (err, token) => {   // above sign up jwt token code is not working here.
+          resp.status(202).send({userDetail, authToken: token });
+        });
+      } else {
+        resp.status(401).send({ Result: "No user found!!" });
+      };
+  
     } else {
-      resp.send({ Result: "No user found!!" });
+      resp.status(400).send({ Result: "Email and password require for login!!" });
     };
 
-  } else {
-    resp.send({ Result: "Email and password require for login!!" });
-  };
+  } catch (error) {
+    console.error(error);
+    resp.status(500).send({ Result: "An error occurred while processing your request." });
+  }
 });
 // API of user account delete 
 route.delete("/account/:id", async (req, resp) => {
-  const getResult = await userModel.deleteOne({ _id: req.params.id });
-  if (getResult) {
-    resp.send(getResult);
-  } else {
-    resp.send({ Result: "Some thing went wrong!!" });
+  try {
+
+    const getResult = await userModel.deleteOne({ _id: req.params.id });
+    if (getResult) {
+      resp.status(202).send(getResult);
+    } else {
+      resp.status(400).send({ Result: "Some thing went wrong!!" });
+    }
+    
+  } catch (error) {
+    console.error(error);
+    resp.status(500).send({ Result: "An error occurred while processing your request." });
   }
 });
 
 // API of product add
 route.post("/add-product", async (req, resp) => {
-  if ( req.body.name && req.body.price && req.body.brand && req.body.category && req.body.userId ) {
-    const feedData = new productModel(req.body);
-    const result = await feedData.save();
-    resp.send(result);
-  } else {
-    resp.send({ Result: "Please fill the all are requirement details!!" });
+  try {
+
+    if ( req.body.name && req.body.price && req.body.brand && req.body.category && req.body.userId ) {
+      const feedData = new productModel(req.body);
+      const result = await feedData.save();
+      resp.status(201).send(result);
+    } else {
+      resp.status(400).send({ Result: "Please fill the all are requirement details!!" });
+    }
+
+  } catch (error) {
+    console.error(error);
+    resp.status(500).send({ Result: "An error occurred while processing your request." });
   }
 });
-// API of show products seperately to every login/signup user only
-route.get("/products-of-user/:userId", async ( req, resp) => {
-  const getData = await productModel.find({ userId: req.params.userId });
-  if (getData.length > 0) {
-    resp.send(getData);
-  } else {
-    resp.send({ Result: "No products found!!" });
+// API of show products seperately to every login/signup user
+route.get("/products-of-user/:userId", async (req, resp) => {
+  try {
+
+    const getData = await productModel.find({ userId: req.params.userId });
+    if (getData.length > 0) {
+      resp.status(200).send(getData);
+    } else {
+      resp.status(404).send({ Result: "No products found!!" });
+    }
+
+  } catch (error) {
+    console.error(error);
+    resp.status(500).send({ Result: "An error occurred while processing your request." });
   }
 });
 // API of product delete
 route.delete("/products/:id", async (req, resp) => {
-  const getResult = await productModel.deleteOne({ _id: req.params.id });
-  if (getResult) {
-    resp.send(getResult);
-  } else {
-    resp.send({ Result: "Some thing went wrong!!" });
+  try {
+
+    const getResult = await productModel.deleteOne({ _id: req.params.id });
+    if (getResult) {
+      resp.status(202).send(getResult);
+    } else {
+      resp.status(400).send({ Result: "Some thing went wrong!!" });
+    }
+
+  } catch (error) {
+    console.error(error);
+    resp.status(500).send({ Result: "An error occurred while processing your request." });
   }
 });
 // API of get product for update this product
-route.get("/products/:id", async (req, resp) => {      
-  const getData = await productModel.findOne({ _id: req.params.id });
-  if (getData) {
-    resp.send(getData);
-  } else {
-    resp.send({ Result: "No record found!!" });
+route.get("/products/:id", async (req, resp) => {  
+  try {
+    
+    const getData = await productModel.findOne({ _id: req.params.id });
+    if (getData) {
+      resp.status(200).send(getData);
+    } else {
+      resp.status(404).send({ Result: "No record found!!" });
+    }
+
+  } catch (error) {
+    console.error(error);
+    resp.status(500).send({ Result: "An error occurred while processing your request." });
   }
 });
 // API of update product
 route.put("/products/:id", async (req, resp) => {
-  const getData = await productModel.updateOne(
-    { _id: req.params.id },
-    { $set: req.body }
-  );
-  if (getData) {
-    resp.send(getData);
+  try {
+
+    const getData = await productModel.updateOne(
+      { _id: req.params.id },
+      { $set: req.body }
+    );
+    if (getData) {
+      resp.status(202).send(getData);
+    }
+
+  } catch (error) {
+    console.error(error);
+    resp.status(500).send({ Result: "An error occurred while processing your request." });
   }
 });
 // API of product search
-route.get("/search/:key", verifyToken, async (req, resp) => {
-  const getdata = await productModel.find({
-    $or: [
-      { name: { $regex: req.params.key } },
-      { category: { $regex: req.params.key } },
-      { brand: { $regex: req.params.key } },
-    ],
-  });
-  resp.send(getdata);
+route.get("/search/:key", async (req, resp) => {
+  try {
+    
+    const getdata = await productModel.find({
+      $or: [
+        { name: { $regex: req.params.key } },
+        { category: { $regex: req.params.key } },
+        { brand: { $regex: req.params.key } },
+      ],
+    });
+    resp.status(200).send(getdata);
+
+  } catch (error) {
+    console.error(error);
+    resp.status(500).send({ Result: "An error occurred while processing your request." });
+  }
 });
 // API of delete products of an user on an account delete
-route.delete("/products-of-user/:userId", async ( req, resp) => {
-  const getData = await productModel.deleteMany({ userId: req.params.userId });
-  resp.send(getData);
+route.delete("/products-of-user/:userId", async (req, resp) => {
+  try {
+    
+    const getData = await productModel.deleteMany({ userId: req.params.userId });
+    resp.status(200).send(getData);
+
+  } catch (error) {
+    console.error(error);
+    resp.status(500).send({ Result: "An error occurred while processing your request." });
+  }
 });
+
+app.use("/", route);
 
 
 app.listen(port);
