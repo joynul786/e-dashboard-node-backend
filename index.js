@@ -20,38 +20,42 @@ route.use(verifyToken);
 
 
 
-//  API of Sing up
+//  API of Sing up=
 app.post("/signup", async (req, resp) => {
   try {
 
     if (req.body.name && req.body.email && req.body.password) {
+      // user check in data base
+      const isUserExist = await userModel.findOne({ email: req.body.email });
+      if(isUserExist) {
+        return resp.status(400).send({ Result: "Already have user with the same email id !!!" });
+      };
+      // If new user then send details to data base
       const user = new userModel(req.body);
       let resultData = await user.save();
       resultData = resultData.toObject();
       delete resultData.password;
-  
+      // Token generate with key and send it with user details except password
       const token = Jwt.sign(resultData, jwtKey, { expiresIn: "1h" });
-      resp.send(201)({resultData, authToken: token});
-      
+      resp.status(201).send({resultData, authToken: token});
     } else {
-      resp.status(401).send({ Result: "Name, email and password required for login!!" });
+      resp.status(400).send({ Result: "Name, email and password required for login!!" });
     };
 
   } catch (error) {
     console.error(error);
     resp.status(500).send({ Result: "An error occurred while processing your request." });
   }
-
 });
-// API of Login
+// API of Login=
 app.post("/login", async (req, resp) => {
   try {
-
+      // Existing user check in data base
     if (req.body.email && req.body.password) {
       const userDetail = await userModel.findOne(req.body).select("-password");
-  
+      // Token generate with key and send it with user details except password
       if (userDetail) {    
-        Jwt.sign({ userDetail }, jwtKey, { expiresIn: "1h" }, (err, token) => {   // above sign up jwt token code is not working here.
+        Jwt.sign({ userDetail }, jwtKey, { expiresIn: "1h" }, (err, token) => {   // note:above sign up jwt token code is not working here.
           resp.status(202).send({userDetail, authToken: token });
         });
       } else {
@@ -67,7 +71,7 @@ app.post("/login", async (req, resp) => {
     resp.status(500).send({ Result: "An error occurred while processing your request." });
   }
 });
-// API of user account delete 
+// API of user account delete=
 route.delete("/account/:id", async (req, resp) => {
   try {
 
@@ -84,7 +88,7 @@ route.delete("/account/:id", async (req, resp) => {
   }
 });
 
-// API of product add
+// API of product add=
 route.post("/add-product", async (req, resp) => {
   try {
 
@@ -94,14 +98,14 @@ route.post("/add-product", async (req, resp) => {
       resp.status(201).send(result);
     } else {
       resp.status(400).send({ Result: "Please fill the all are requirement details!!" });
-    }
+    };
 
   } catch (error) {
     console.error(error);
     resp.status(500).send({ Result: "An error occurred while processing your request." });
   }
 });
-// API of show products seperately to every login/signup user
+// API of show products seperately to every login/signup user=
 route.get("/products-of-user/:userId", async (req, resp) => {
   try {
 
@@ -149,7 +153,7 @@ route.get("/products/:id", async (req, resp) => {
     resp.status(500).send({ Result: "An error occurred while processing your request." });
   }
 });
-// API of update product
+// API of update product=
 route.put("/products/:id", async (req, resp) => {
   try {
 
@@ -166,7 +170,7 @@ route.put("/products/:id", async (req, resp) => {
     resp.status(500).send({ Result: "An error occurred while processing your request." });
   }
 });
-// API of product search
+// API of product search=
 route.get("/search/:key", async (req, resp) => {
   try {
     
@@ -184,7 +188,7 @@ route.get("/search/:key", async (req, resp) => {
     resp.status(500).send({ Result: "An error occurred while processing your request." });
   }
 });
-// API of delete products of an user on an account delete
+// API of delete products of an user on an account delete=
 route.delete("/products-of-user/:userId", async (req, resp) => {
   try {
     
