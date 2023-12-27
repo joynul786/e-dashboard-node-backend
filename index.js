@@ -4,6 +4,8 @@ const userModel = require("./mongoDBConnect/UserSchema");
 const productModel = require("./mongoDBConnect/ProductSchema");
 require("./mongoDBConnect/config");
 
+const bcrypt = require("bcryptjs");
+
 const verifyToken = require("./middlewares");
 const route = express.Router();
 
@@ -22,24 +24,30 @@ route.use(verifyToken);
 
 //  API of Sing up=
 app.post("/signup", async (req, resp) => {
-  try {
 
-    if (req.body.name && req.body.email && req.body.password) {
-      // user check in data base
-      const isUserExist = await userModel.findOne({ email: req.body.email });
+  // Get all the data from body
+  const { name, email, password } = req.body;
+  // Encrypt the password
+  const encPassword = await bcrypt.hash(password, 10);
+  
+  try {
+    
+    if (name && email && encPassword) {
+      // check if user already exists
+      const isUserExist = await userModel.findOne({ email: email });
       if(isUserExist) {
         return resp.status(400).send({ Result: "Already have user with the same email id !!!" });
       };
       // If new user then send details to data base
-      const user = new userModel(req.body);
+      const user = new userModel({ name, email, password: encPassword });
       let resultData = await user.save();
       resultData = resultData.toObject();
       delete resultData.password;
-      // Token generate with key and send it with user details except password
+      // Token generate and send it with user details except password
       const token = Jwt.sign(resultData, jwtKey, { expiresIn: "1h" });
       resp.status(201).send({resultData, authToken: token});
     } else {
-      resp.status(400).send({ Result: "Name, email and password required for login!!" });
+      resp.status(400).send({ Result: "Name, Email and Password required for login!!" });
     };
 
   } catch (error) {
@@ -49,21 +57,30 @@ app.post("/signup", async (req, resp) => {
 });
 // API of Login=
 app.post("/login", async (req, resp) => {
+
+  // Get all the data from body
+  const { email, password } = req.body;
+
   try {
-      // Existing user check in data base
-    if (req.body.email && req.body.password) {
-      const userDetail = await userModel.findOne(req.body).select("-password");
-      // Token generate with key and send it with user details except password
-      if (userDetail) {    
-        Jwt.sign({ userDetail }, jwtKey, { expiresIn: "1h" }, (err, token) => {   // note:above sign up jwt token code is not working here.
+
+    if (email && password) {
+      // Find the user in data base
+      let userDetail = await userModel.findOne({ email: email });
+      // User matched with email and then Compare the password with DB password
+      if (userDetail && (await bcrypt.compare(password, userDetail.password))) { 
+        // Delete password from userDetail
+        userDetail = userDetail.toObject();
+        delete userDetail.password;
+        // Token generate and send it with user details except password
+        await Jwt.sign({ userDetail }, jwtKey, { expiresIn: "1h" }, (err, token) => {   // note:above sign up jwt token code is not working here.
           resp.status(202).send({userDetail, authToken: token });
         });
       } else {
-        resp.status(401).send({ Result: "No user found!!" });
+        // Password and Email don't match
+        resp.status(401).send({ Result: "No user found / Invalid password!!" });
       };
-  
     } else {
-      resp.status(400).send({ Result: "Email and password require for login!!" });
+      resp.status(400).send({ Result: "Email and Password require for login!!" });
     };
 
   } catch (error) {
