@@ -44,7 +44,7 @@ app.post("/signup", async (req, resp) => {
       resultData = resultData.toObject();
       delete resultData.password;
       // Token generate and send it with user details except password
-      const token = Jwt.sign(resultData, jwtKey, { expiresIn: "1h" });
+      const token = Jwt.sign(resultData, jwtKey, { expiresIn: "10h" });
       resp.status(201).send({resultData, authToken: token});
     } else {
       resp.status(400).send({ Result: "Name, Email and Password required for login!!" });
@@ -72,7 +72,7 @@ app.post("/login", async (req, resp) => {
         userDetail = userDetail.toObject();
         delete userDetail.password;
         // Token generate and send it with user details except password
-        await Jwt.sign({ userDetail }, jwtKey, { expiresIn: "1h" }, (err, token) => {   // note:above sign up jwt token code is not working here.
+        await Jwt.sign({ userDetail }, jwtKey, { expiresIn: "10h" }, (err, token) => {   // note:above sign up jwt token code is not working here.
           resp.status(202).send({userDetail, authToken: token });
         });
       } else {
