@@ -53,7 +53,7 @@ app.post("/signup", async (req, resp) => {
   } catch (error) {
     console.error(error);
     resp.status(500).send({ Result: "An error occurred while processing your request." });
-  }
+  };
 });
 // API of Login=
 app.post("/login", async (req, resp) => {
