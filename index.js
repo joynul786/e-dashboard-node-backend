@@ -101,8 +101,32 @@ route.delete("/account/:id", async (req, resp) => {
     
   } catch (error) {
     console.error(error);
-    resp.status(500).send({ Result: "An error occurred while processing your request." });
+    resp.status(500).send({ Result: "An error occurred while processing your request!!" });
   }
+});
+// API of forgot password change of singed up user
+app.put("/password-change/:email", async (req, resp) => {
+  try {
+
+    // Check the user in data base
+    const userEmail = await userModel.findOne({ email: req.params.email });
+    if (userEmail) {
+      // User present in data base
+      // Hash the password before saving
+      const hashedPassword = await bcrypt.hash(req.body.password, 10);
+      await userModel.updateOne(
+        { email: req.params.email },
+        { $set: { password: hashedPassword } },
+      );
+      resp.status(201).send({ Result: `${userEmail.name} successfully update your password.` });
+    } else {
+      // User not present in data base
+      resp.status(404).send({ Result: "No user found with this email address!!" });
+    };
+    
+  } catch (error) {
+    console.error({ Result: "An error occurred while processing your request!!" });
+  };
 });
 
 // API of product add=
